@@ -9,7 +9,12 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
   const { data: session } = useSession();
-  const reloadSession = () => {};
+
+  console.log("Here is the session", session);
+  const reloadSession = () => {
+    const event = new Event("visibilitychange");
+    document.dispatchEvent(event);
+  };
   return (
     <Box>
       {session?.user?.username ? (

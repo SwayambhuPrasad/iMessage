@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import {
   ApolloServerPluginDrainHttpServer,
+  ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageLocalDefault,
 } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
@@ -8,8 +9,13 @@ import express from "express";
 import http from "http";
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typedefs";
+import { getSession } from "next-auth/react";
+import * as dotenv from "dotenv";
+import { GraphQLContext, Session } from "../util/types";
+import { PrismaClient } from "@prisma/client";
 
 async function main() {
+  dotenv.config();
   const app = express();
   const httpServer = http.createServer(app);
 
@@ -17,17 +23,27 @@ async function main() {
     typeDefs,
     resolvers,
   });
+  const corsOption = {
+    origin: process.env.NEXTAUTH_URL,
+    credentials: true,
+  };
+  //context parameters
+  const prisma = new PrismaClient();
   const server = new ApolloServer({
     schema,
     csrfPrevention: true,
     cache: "bounded",
+    context: async ({ req, res }): Promise<GraphQLContext> => {
+      const session = (await getSession({ req })) as unknown as Session;
+      return { session, prisma };
+    },
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
     ],
   });
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, cors: corsOption });
   await new Promise<void>((resolve) =>
     httpServer.listen({ port: 4000 }, resolve)
   );
