@@ -2,7 +2,16 @@ import { gql } from "@apollo/client";
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default {
-  Queries: {},
+  Queries: {
+    searchUsers: gql`
+      query SearchUsername($username: String!) {
+        searchUsers(username: $username) {
+          id
+          username
+        }
+      }
+    `,
+  },
   Mutations: {
     createUsername: gql`
       mutation CreateUsername($username: String!) {

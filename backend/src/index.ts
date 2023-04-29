@@ -1,18 +1,17 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import { PrismaClient } from "@prisma/client";
 import {
   ApolloServerPluginDrainHttpServer,
-  ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageLocalDefault,
 } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
+import * as dotenv from "dotenv";
 import express from "express";
 import http from "http";
+import { getSession } from "next-auth/react";
+import { GraphQLContext, Session } from "../util/types";
 import resolvers from "./graphql/resolvers";
 import typeDefs from "./graphql/typedefs";
-import { getSession } from "next-auth/react";
-import * as dotenv from "dotenv";
-import { GraphQLContext, Session } from "../util/types";
-import { PrismaClient } from "@prisma/client";
 
 async function main() {
   dotenv.config();
