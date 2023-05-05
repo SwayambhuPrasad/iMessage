@@ -24,6 +24,7 @@ import ConversationOparations from "../../../../graphql/operations/conversation"
 import UserOparations from "../../../../graphql/operations/user";
 import Participants from "./Participants";
 import UserSearchList from "./UserSearchList";
+import { useRouter } from "next/router";
 
 interface ModalProps {
   isOpen: boolean;
@@ -39,6 +40,8 @@ const ConversationModal: React.FunctionComponent<ModalProps> = ({
   const {
     user: { id: userId },
   } = session;
+
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [participants, setParticipants] = useState<Array<SearchedUser>>([]);
   const [searchUsers, { data, error, loading }] = useLazyQuery<
@@ -73,6 +76,18 @@ const ConversationModal: React.FunctionComponent<ModalProps> = ({
           participantIds,
         },
       });
+      if (!data?.createConversation) throw new Error("Failed to update");
+
+      const {
+        createConversation: { conversationId },
+      } = data;
+      router.push({ query: conversationId });
+      // clear state and close model
+      //on successful creation
+
+      setParticipants([]);
+      setUsername("");
+      onClose();
       console.log("here is data", data);
     } catch (e: any) {
       console.log("onCreateConversation error", error);
