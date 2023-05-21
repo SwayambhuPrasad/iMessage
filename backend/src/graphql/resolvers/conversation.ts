@@ -8,7 +8,7 @@ const resolvers = {
       __: any,
       context: GraphQLContext
     ): Promise<Array<ConversationPopulated>> => {
-      const { prisma, session } = context;
+      const { prisma, session, pubsub } = context;
       if (!session) throw new ApolloError("Not authorized");
       const {
         user: { id: userId },
@@ -31,6 +31,7 @@ const resolvers = {
           // },
           include: conversationPopulated,
         });
+
         return conversation.filter(
           (c) => !!c.participants.find((f) => f.user.id === userId)
         );
@@ -46,7 +47,7 @@ const resolvers = {
       args: { participantIds: Array<string> },
       context: GraphQLContext
     ): Promise<{ conversationId: string }> => {
-      const { session, prisma } = context;
+      const { session, prisma, pubsub } = context;
       const { participantIds } = args;
 
       if (!session?.user) throw new ApolloError("Not authorized");
@@ -68,11 +69,23 @@ const resolvers = {
           },
           include: conversationPopulated,
         });
+
+        pubsub.publish("CONVERSATION_CREATED", {
+          conversationCreated: conversation,
+        });
         return { conversationId: conversation.id };
       } catch (error) {
         console.log("createConversation error", error);
         throw new ApolloError("Error creating conversation");
       }
+    },
+  },
+  Subscription: {
+    conversationCreated: {
+      subscribe: (_: any, __: any, context: GraphQLContext) => {
+        const { pubsub } = context;
+        return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+      },
     },
   },
 };
