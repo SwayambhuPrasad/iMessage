@@ -6,6 +6,8 @@ import { useLazyQuery, useQuery } from "@apollo/client";
 import { ConversationsData } from "@/src/util/types";
 import { ConversationPopulated } from "@/../backend/util/types";
 import { useEffect } from "react";
+import conversation from "../../../graphql/operations/conversation";
+import { useRouter } from "next/router";
 
 interface ConversationsWrapperProps {
   session: Session;
@@ -21,9 +23,17 @@ const ConversationsWrapper: React.FunctionComponent<
     subscribeToMore,
   } = useQuery<ConversationsData>(ConversationOperations.Queries.conversations);
 
-  console.log("query data", conversationData);
+  const router = useRouter();
+  const {
+    query: { conversationId },
+  } = router;
+  const onViewConversation = async (conversationId: string) => {
+    //push the conversationId to the router query params
+    console.log(conversationId);
+    router.push({ query: { conversationId } });
+    //mark the conversation as read
+  };
   const subscribeToNewConversation = () => {
-    console.log("calling subscribe");
     subscribeToMore({
       document: ConversationOperations.Subscriptions.conversationCreated,
       updateQuery: (
@@ -36,12 +46,17 @@ const ConversationsWrapper: React.FunctionComponent<
           };
         }
       ) => {
-        if (!subscriptionData.data) return prev;
+        if (
+          !subscriptionData.data ||
+          prev.conversations.find(
+            (c) => c.id === subscriptionData.data.conversationCreated.id
+          )
+        )
+          return prev;
 
-        console.log("Here Is SubscriptionData", subscriptionData);
         const newConversations = subscriptionData.data.conversationCreated;
         return Object.assign({}, prev, {
-          conversations: [...prev.conversations, newConversations],
+          conversations: [newConversations, ...prev.conversations],
         });
       },
     });
@@ -53,6 +68,7 @@ const ConversationsWrapper: React.FunctionComponent<
   return (
     <Box
       width={{ base: "100%", md: "400px" }}
+      display={{ base: conversationId ? "none" : "flex", md: "flex" }}
       border={"1px solid red"}
       backgroundColor={"whiteAlpha.50"}
       py={6}
@@ -62,6 +78,7 @@ const ConversationsWrapper: React.FunctionComponent<
       <ConversationList
         session={session}
         conversations={conversationData?.conversations || []}
+        onViewConversation={onViewConversation}
       />
     </Box>
   );
