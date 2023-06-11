@@ -8,6 +8,7 @@ import { ConversationPopulated } from "@/../backend/util/types";
 import { useEffect } from "react";
 import conversation from "../../../graphql/operations/conversation";
 import { useRouter } from "next/router";
+import SkeletonLoader from "../../common/SkeletonLoder";
 
 interface ConversationsWrapperProps {
   session: Session;
@@ -69,17 +70,23 @@ const ConversationsWrapper: React.FunctionComponent<
     <Box
       width={{ base: "100%", md: "400px" }}
       display={{ base: conversationId ? "none" : "flex", md: "flex" }}
-      border={"1px solid red"}
+      border={"1px solid "}
       backgroundColor={"whiteAlpha.50"}
+      flexDirection={"column"}
+      gap={4}
       py={6}
       px={3}
     >
       {/* seleton loder */}
-      <ConversationList
-        session={session}
-        conversations={conversationData?.conversations || []}
-        onViewConversation={onViewConversation}
-      />
+      {conversationLoading ? (
+        <SkeletonLoader count={7} height="80px" />
+      ) : (
+        <ConversationList
+          session={session}
+          conversations={conversationData?.conversations || []}
+          onViewConversation={onViewConversation}
+        />
+      )}
     </Box>
   );
 };

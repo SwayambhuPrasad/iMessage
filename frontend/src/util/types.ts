@@ -1,4 +1,7 @@
-import { ConversationPopulated } from "../../../backend/util/types";
+import {
+  ConversationPopulated,
+  MessagePopulated,
+} from "../../../backend/util/types";
 // users
 export interface CreateUsernameData {
   createUsername: {
@@ -38,4 +41,14 @@ export interface CreateConversationInput {
 
 export interface ConversationsData {
   conversations: Array<ConversationPopulated>;
+}
+
+//messages
+
+export interface MessageData {
+  messages: Array<MessagePopulated>;
+}
+
+export interface MessagesVariables {
+  conversationId: string;
 }
